@@ -1,9 +1,11 @@
 const createUser = require('./createUser');
 const findUser = require('./findUser');
-const addAdminUser = require('./addAdminUser');
+const permisionAdmin = require('./persmisionAdmin');
+const findUserWithAdmin = require('./findUserWithAdmin');
 
 module.exports = {
     createUser,
     findUser,
-    addAdminUser
+    permisionAdmin,
+    findUserWithAdmin
 };

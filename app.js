@@ -11,6 +11,7 @@ const chat2 = '-348731507';
 
 const bot = new TelegramBot(token, {polling: true});
 
+// Registration user in database
 bot.onText(/\/regme/, function (msg, match) {
     var option = {
         parse_mode: "Markdown",
@@ -29,13 +30,10 @@ bot.onText(/\/regme/, function (msg, match) {
     };
     bot.sendMessage(msg.chat.id, "Send your contact?", option).then(() => {
         bot.once("contact", async (msg) => {
-            let userId = msg.contact.user_id;
-            let firstName = msg.contact.first_name;
-            let lastName = msg.contact.last_name;
-            let phoneNumber = msg.contact.phone_number;
-            await controller.user.createUser(userId, firstName, lastName, phoneNumber);
+            let {user_id, first_name, last_name, phone_number} = msg.contact;
+            await controller.user.createUser(user_id, first_name, last_name, phone_number);
             bot.sendMessage(msg.chat.id,
-                `Thank you ${firstName} ${lastName} with phone ${phoneNumber} for registration!`,
+                `Thank you ${first_name} ${last_name} with phone ${phone_number} for registration!`,
                 {
                     reply_markup: {
                         remove_keyboard: true
@@ -53,7 +51,33 @@ bot.onText(/\/regme/, function (msg, match) {
     });
 });
 
+// Accept user to admin
+bot.onText(/\/addAdmin (.+)/, async (msg, match) => {
+    let id = msg.from.id;
+    let isAdmin = await controller.user.findUserWithAdmin(id);
+    if (isAdmin) {
+        let phoneNumber = match[1];
+        controller.user.permisionAdmin(phoneNumber, true);
+        bot.sendMessage(msg.chat.id, `Admin ${phoneNumber} added!`);
+    } else {
+        bot.sendMessage(msg.chat.id, `Sorry, ${msg.from.first_name} ${msg.from.last_name} ${msg.from.phone_number} ${msg.from.username} you don't have permisions on this operation!`);
+    }
+});
 
+// Delete user from admin
+bot.onText(/\/delAdmin (.+)/, async (msg, match) => {
+    let id = msg.from.id;
+    let isAdmin = await controller.user.findUserWithAdmin(id);
+    if (isAdmin) {
+        let phoneNumber = match[1];
+        controller.user.permisionAdmin(phoneNumber, false);
+        bot.sendMessage(msg.chat.id, `Admin ${phoneNumber} deleted!`);
+    } else {
+        bot.sendMessage(msg.chat.id, `Sorry, ${msg.from.first_name} ${msg.from.last_name} ${msg.from.phone_number} ${msg.from.username} you don't have permisions on this operation!`);
+    }
+});
+
+/// tests and dyrdom
 bot.onText(/\/echo (.+)/, (msg, match) => {
     const chatId = msg.chat.id;
     const resp = match[1];
@@ -69,12 +93,7 @@ let options = {
         ]
     })
 };
-bot.onText(/\/hello (.+)/, (msg, match) => {
-    // console.log(msg.from);
-    // console.log(msg.chat);
-    bot.sendMessage(msg.chat.id, match[1]);
-    controller.user.addAdminUser(130059762, true);
-});
+
 bot.onText(/\/createUser (.+)/, async (msg, match) => {
     let userId = msg.from.id;
     let userIdForRegistration = match[1];

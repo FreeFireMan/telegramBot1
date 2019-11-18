@@ -57,7 +57,7 @@ bot.onText(/\/addAdmin (.+)/, async (msg, match) => {
     let isAdmin = await controller.user.findUserWithAdmin(id);
     if (isAdmin) {
         let phoneNumber = match[1];
-        controller.user.permisionAdmin(phoneNumber, true);
+        await controller.user.permisionAdmin(phoneNumber, true);
         bot.sendMessage(msg.chat.id, `Admin ${phoneNumber} added!`);
     } else {
         bot.sendMessage(msg.chat.id, `Sorry, ${msg.from.first_name} ${msg.from.last_name} ${msg.from.phone_number} ${msg.from.username} you don't have permisions on this operation!`);
@@ -70,8 +70,20 @@ bot.onText(/\/delAdmin (.+)/, async (msg, match) => {
     let isAdmin = await controller.user.findUserWithAdmin(id);
     if (isAdmin) {
         let phoneNumber = match[1];
-        controller.user.permisionAdmin(phoneNumber, false);
+        await controller.user.permisionAdmin(phoneNumber, false);
         bot.sendMessage(msg.chat.id, `Admin ${phoneNumber} deleted!`);
+    } else {
+        bot.sendMessage(msg.chat.id, `Sorry, ${msg.from.first_name} ${msg.from.last_name} ${msg.from.phone_number} ${msg.from.username} you don't have permisions on this operation!`);
+    }
+});
+
+// Show user admin
+bot.onText(/\/showAdmin/, async (msg, match) => {
+    let id = msg.from.id;
+    let isAdmin = await controller.user.findUserWithAdmin(id);
+    if (isAdmin) {
+        let admins = await controller.user.findAllUserWithAdmin();
+        bot.sendMessage(msg.chat.id, admins);
     } else {
         bot.sendMessage(msg.chat.id, `Sorry, ${msg.from.first_name} ${msg.from.last_name} ${msg.from.phone_number} ${msg.from.username} you don't have permisions on this operation!`);
     }

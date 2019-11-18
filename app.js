@@ -6,12 +6,13 @@ let controller = require('./controller');
 
 let TelegramBot = require('node-telegram-bot-api');
 let token = '1006075112:AAFGjaFlDEFcOkgNmlJN4CIohcANkv-dqD8';
+// let token = '901231463:AAHMqvWSKVPQLi7ufsJwfQRIkH3Ebnx4GMw';
 const chat1 = '-362169744';
 const chat2 = '-348731507';
 
 const bot = new TelegramBot(token, {polling: true});
 
-// Registration user in database
+// User Registration in database
 bot.onText(/\/regme/, function (msg, match) {
     var option = {
         parse_mode: "Markdown",
@@ -51,8 +52,8 @@ bot.onText(/\/regme/, function (msg, match) {
     });
 });
 
-// Accept user to admin
-bot.onText(/\/addAdmin (.+)/, async (msg, match) => {
+// User Accept to admin
+bot.onText(/\/adminadd (.+)/, async (msg, match) => {
     let id = msg.from.id;
     let isAdmin = await controller.user.findUserWithAdmin(id);
     if (isAdmin) {
@@ -64,8 +65,8 @@ bot.onText(/\/addAdmin (.+)/, async (msg, match) => {
     }
 });
 
-// Delete user from admin
-bot.onText(/\/delAdmin (.+)/, async (msg, match) => {
+// User Delete from admin
+bot.onText(/\/admindel (.+)/, async (msg, match) => {
     let id = msg.from.id;
     let isAdmin = await controller.user.findUserWithAdmin(id);
     if (isAdmin) {
@@ -77,8 +78,8 @@ bot.onText(/\/delAdmin (.+)/, async (msg, match) => {
     }
 });
 
-// Show user admin
-bot.onText(/\/showAdmin/, async (msg, match) => {
+// All User show admin
+bot.onText(/\/adminshow/, async (msg, match) => {
     let id = msg.from.id;
     let isAdmin = await controller.user.findUserWithAdmin(id);
     if (isAdmin) {
@@ -89,12 +90,26 @@ bot.onText(/\/showAdmin/, async (msg, match) => {
     }
 });
 
-/// tests and dyrdom
-bot.onText(/\/echo (.+)/, (msg, match) => {
-    const chatId = msg.chat.id;
-    const resp = match[1];
-    bot.sendMessage(chatId, resp);
+// Chat Registration
+bot.onText(/\/chatreg/, async (msg, match) => {
+    let id = msg.from.id;
+    let isAdmin = await controller.user.findUserWithAdmin(id);
+    if (isAdmin) {
+        const chatId = msg.chat.id;
+        const chatTitle = msg.chat.title;
+        let chatCreated = await controller.chat.createChat(chatId, chatTitle);
+        if (chatCreated) {
+            bot.sendMessage(msg.chat.id, `Chat with NAME: "${chatTitle}" and ID: "${chatId}" is created!`);
+        } else {
+            bot.sendMessage(msg.chat.id, `Chat with NAME: "${chatTitle}" and ID: "${chatId}" is NOT created!`);
+        }
+    } else {
+        bot.sendMessage(msg.chat.id, `Sorry, ${msg.from.first_name} ${msg.from.last_name} ${msg.from.phone_number} ${msg.from.username} you don't have permisions on this operation!`);
+    }
 });
+// Chat Delete
+// All Chat Show and send message
+
 
 let options = {
     reply_markup: JSON.stringify({
@@ -105,7 +120,6 @@ let options = {
         ]
     })
 };
-
 bot.onText(/\/createUser (.+)/, async (msg, match) => {
     let userId = msg.from.id;
     let userIdForRegistration = match[1];

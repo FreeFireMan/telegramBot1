@@ -8,14 +8,13 @@ module.exports = async (user_id) => {
     try {
         console.log("deleteUserByIdTelegram :");
         console.log(user_id);
-        /*const UserModel = database.getModel('User');
-        await UserModel.delete({is_admin: isAdmin}, {where: {phone_number: phoneNumber}});
-        let findedUser = await UserModel.findOne({where: {phone_number: phoneNumber}});
-        if (findedUser.dataValues.is_admin === true) {
-            console.log(`User: "${findedUser.dataValues.first_name} ${findedUser.dataValues.last_name}" with number: ${findedUser.dataValues.phone_number} - is a Admin`);
-        } else if (findedUser.dataValues.is_admin === false) {
-            console.log(`User: "${findedUser.dataValues.first_name} ${findedUser.dataValues.last_name}" with number: ${findedUser.dataValues.phone_number} - is NOT Admin`);
-        }*/
+        const UserModel = database.getModel('User');
+        let result = await UserModel.destroy({where: {data_id: user_id}});
+        if (result) {
+            console.log(`User ${result} destroyed!!!`);
+        } else {
+            console.log(`Something went wrong in delete user ${user_id}`);
+        }
     } catch (e) {
         console.log(e.message);
     }

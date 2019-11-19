@@ -5,8 +5,9 @@ let https = require('https');
 let controller = require('./controller');
 
 let TelegramBot = require('node-telegram-bot-api');
-let token = '1006075112:AAFGjaFlDEFcOkgNmlJN4CIohcANkv-dqD8';
-// let token = '901231463:AAHMqvWSKVPQLi7ufsJwfQRIkH3Ebnx4GMw';
+//let token = '1006075112:AAFGjaFlDEFcOkgNmlJN4CIohcANkv-dqD8';
+ let token = '901231463:AAHMqvWSKVPQLi7ufsJwfQRIkH3Ebnx4GMw';
+
 const chat1 = '-362169744';
 const chat2 = '-348731507';
 
@@ -146,5 +147,54 @@ bot.onText(/\/owu/, (msg, match) => {
         // https.get(`https://api.telegram.org/bot${token}/sendMessage?chat_id=${chat2}&text=Hello+World`, res => {
         //     console.log('sended');
         // });
+    }
+});
+bot.onText(/\/delUser/, async (msg, match) => {
+    let id = msg.from.id;
+    let isAdmin = await controller.user.findUserWithAdmin(id);
+    if (isAdmin) {
+        let admins = await controller.user.findAdminsForDel();
+        let delUserOption =  admins.map(item=>{
+            return [
+                {
+                    text: `Delete ${item.first_name} ${item.last_name?item.last_name:""} ${item.phone_number}`,
+                    callback_data: JSON.stringify(
+                        {
+                            id: item.user_id,
+                            title: item.first_name,
+                            whatDo : 'delChat'
+                        })
+                }
+            ]
+        })
+        console.log(admins);
+        bot.sendMessage(msg.chat.id,"Chois chats",{
+            reply_markup:{
+                inline_keyboard: delUserOption
+            }
+        });
+        bot.on('callback_query',async (query,test)=>{
+            console.log('test : ',test);
+            console.log('query : ',query);
+            let id = msg.from.id;
+            let parseData = JSON.parse(query.data)
+            let isAdmin = await controller.user.findUserWithAdmin(id);
+            switch (parseData.whatDo) {
+                case "delChat":
+                    let id = msg.from.id;
+                    let isAdmin = await controller.user.findUserWithAdmin(id);
+                    if (isAdmin) {
+                        let resultDel = await controller.user.deleteUserByIdTelegram(parseData.id);
+                        bot.sendMessage(msg.chat.id,"You not have a problem")
+                    }
+                    break;
+                default:
+                    console.log("Something went wrong in switch case");
+                    bot.sendMessage(msg.chat.id,"Something went wrong")
+            }
+
+        });
+    } else {
+        bot.sendMessage(msg.chat.id, `Sorry, ${msg.from.first_name} ${msg.from.last_name} ${msg.from.phone_number} ${msg.from.username} you don't have permisions on this operation!`);
     }
 });

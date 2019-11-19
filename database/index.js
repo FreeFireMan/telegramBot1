@@ -6,7 +6,11 @@ module.exports = (() => {
     let instance;
 
     function initConnection() {
-        const client = new Sequelize('telegramBotScheme', 'root', 'root1234', {
+       /* const client = new Sequelize('telegramBotScheme', 'root', 'root1234', {
+            host: 'localhost',
+            dialect: 'mysql'
+        });*/
+        const client = new Sequelize('telegramBotScheme', 'root', 'root', {
             host: 'localhost',
             dialect: 'mysql'
         });

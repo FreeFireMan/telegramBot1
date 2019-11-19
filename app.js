@@ -1,4 +1,4 @@
-let token = require('./mytoken.js');
+let token = require('./token.js');
 let db = require('./database').getInstance();
 db.setModels();
 

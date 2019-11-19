@@ -1,12 +1,10 @@
+let token = require('./mytoken.js');
 let db = require('./database').getInstance();
 db.setModels();
+
 let https = require('https');
-
-let controller = require('./controller');
-
+    let controller = require('./controller');
 let TelegramBot = require('node-telegram-bot-api');
-//let token = '1006075112:AAFGjaFlDEFcOkgNmlJN4CIohcANkv-dqD8';
- let token = '901231463:AAHMqvWSKVPQLi7ufsJwfQRIkH3Ebnx4GMw';
 
 const chat1 = '-362169744';
 const chat2 = '-348731507';
@@ -154,45 +152,8 @@ bot.onText(/\/delUser/, async (msg, match) => {
     let isAdmin = await controller.user.findUserWithAdmin(id);
     if (isAdmin) {
         let admins = await controller.user.findAdminsForDel();
-        let navigation = [
-            {
-                text: `<<`,
-                callback_data: JSON.stringify(
-                    {
-                        id: null,
-                        title: null,
-                        whatDo : 'prevPage'
-                    })
-            },
-            {
-                text: `=======`,
-                callback_data: 'none'
-            },
-            {
-                text: `>>`,
-                callback_data: JSON.stringify(
-                    {
-                        id: null,
-                        title: null,
-                        whatDo : 'nextPage'
-                    })
-            },
-        ]
-        let delUserOption =  admins.map(item=>{
-            return [
-                {
-                    text: `Delete ${item.first_name} ${item.last_name?item.last_name:""} ${item.phone_number}`,
-                    callback_data: JSON.stringify(
-                        {
-                            id: item.user_id,
-                            title: item.first_name,
-                            whatDo : 'delChat'
-                        })
-                }
-            ]
-        });
-        delUserOption.push(navigation);
-        console.log(admins);
+        let delUserOption = await getUserWithPagination(admins);
+
         bot.sendMessage(msg.chat.id,"Choice why must died",{
             reply_markup:{
                 inline_keyboard: delUserOption
@@ -205,7 +166,7 @@ bot.onText(/\/delUser/, async (msg, match) => {
             switch (parseData.whatDo) {
                 case "delChat":
                         let resultDel = await controller.user.deleteUserByIdTelegram(parseData.id);
-                        bot.sendMessage(msg.chat.id,"You not have a problem");
+                        bot.sendMessage(msg.chat.id,`You delete a : ${parseData.title}`);
                     break;
                 default:
                     console.log("Something went wrong in switch case");
@@ -217,6 +178,51 @@ bot.onText(/\/delUser/, async (msg, match) => {
         bot.sendMessage(msg.chat.id, `Sorry, ${msg.from.first_name} ${msg.from.last_name} ${msg.from.phone_number} ${msg.from.username} you don't have permisions on this operation!`);
     }
 });
+bot.onText(/\/count/, async (msg, match) =>{
+    let result = await controller.user.UsersPagination(1,3);
+    console.log('result');
+    console.log(result);
+})
 bot.on("message", msg=>{
     console.log(msg);
 });
+/*
+bot.editMessageText()*/
+function getUserWithPagination(users) {
+    let navigation = [
+        {
+            text: `<<`,
+            callback_data: JSON.stringify(
+                {
+                    id: null,
+                    title: null,
+                    whatDo : 'prevPage'
+                })
+        },
+        {
+            text: `>>`,
+            callback_data: JSON.stringify(
+                {
+                    id: null,
+                    title: null,
+                    whatDo : 'nextPage'
+                })
+        },
+    ]
+
+    let delUserOption = users.map(item=>{
+        return [
+            {
+                text: `Delete ${item.first_name} ${item.last_name?item.last_name:""} ${item.phone_number}`,
+                callback_data: JSON.stringify(
+                    {
+                        id: item.user_id,
+                        title: `${item.first_name} ${item.last_name?item.last_name:""}`,
+                        whatDo : 'delUser'
+                    })
+            }
+        ]
+    });
+    delUserOption.push(navigation);
+    return delUserOption;
+}

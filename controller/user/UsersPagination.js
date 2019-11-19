@@ -4,14 +4,16 @@ const uuid = require('uuid').v1();
 
 const database = require('../../database').getInstance();
 
-module.exports = async (user_id) => {
+module.exports = async (page,limit) => {
     try {
-        console.log("deleteUserByIdTelegram :");
-        console.log(user_id);
+
         const UserModel = database.getModel('User');
-        let result = await UserModel.destroy({where: {data_id: user_id}});
+        const result = await UserModel.count({});
+        const pageCount = result/limit;
+
         if (result) {
-            console.log(`User ${user_id} destroyed!!!`);
+            console.log(`pageCount ${pageCount} `);
+            return result;
         } else {
             console.log(`Something went wrong in delete user ${user_id}`);
         }

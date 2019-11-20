@@ -3,11 +3,8 @@ let db = require('./database').getInstance();
 db.setModels();
 
 let https = require('https');
-    let controller = require('./controller');
+let controller = require('./controller');
 let TelegramBot = require('node-telegram-bot-api');
-
-const chat1 = '-362169744';
-const chat2 = '-348731507';
 
 const bot = new TelegramBot(token, {polling: true});
 
@@ -147,12 +144,15 @@ bot.onText(/\/owu/, (msg, match) => {
         // });
     }
 });
-bot.onText(/\/delUser/, async (msg, match) => {
+bot.onText(/\/del/, async (msg, match) => {
     let id = msg.from.id;
     let isAdmin = await controller.user.findUserWithAdmin(id);
     if (isAdmin) {
-        let admins = await controller.user.findAdminsForDel();
-        let delUserOption = await getUserWithPagination(admins);
+       // let admins = await controller.user.findAdminsForDel();
+        let currentPage = 1;
+        const limitItems = 5;
+        let result = await controller.user.UsersPagination(currentPage,limitItems);
+        let delUserOption = await getUserWithPagination(result.objects);
 
         bot.sendMessage(msg.chat.id,"Choice why must died",{
             reply_markup:{
@@ -168,6 +168,40 @@ bot.onText(/\/delUser/, async (msg, match) => {
                         let resultDel = await controller.user.deleteUserByIdTelegram(parseData.id);
                         bot.sendMessage(msg.chat.id,`You delete a : ${parseData.title}`);
                     break;
+                    case "nextPage":
+                        if (currentPage < result.pageCount){
+                            let newPageArray = await controller.user.UsersPagination(++currentPage,limitItems);
+                            console.log("newPageArray");
+                            console.log(newPageArray);
+                            let nextPageOption = await getUserWithPagination(newPageArray.objects);
+                            bot.editMessageReplyMarkup(
+                                {
+                                    inline_keyboard: nextPageOption
+                                },
+                                {
+                                    chat_id: query.message.chat.id,
+                                    message_id: query.message.message_id
+                                }
+                            )
+                        }
+                        break;
+                        case "prevPage":
+                            if (currentPage>1) {
+                                let newPageArray = await controller.user.UsersPagination(--currentPage,limitItems);
+                                console.log("newPageArray");
+                                console.log(newPageArray);
+                                let nextPageOption = await getUserWithPagination(newPageArray.objects);
+                                bot.editMessageReplyMarkup(
+                                    {
+                                        inline_keyboard: nextPageOption
+                                    },
+                                    {
+                                        chat_id: query.message.chat.id,
+                                        message_id: query.message.message_id
+                                    }
+                                )
+                            }
+                                break;
                 default:
                     console.log("Something went wrong in switch case");
                     bot.sendMessage(msg.chat.id,"Something went wrong")
@@ -182,6 +216,14 @@ bot.onText(/\/count/, async (msg, match) =>{
     let result = await controller.user.UsersPagination(1,3);
     console.log('result');
     console.log(result);
+})
+bot.onText(/\/stic/, async (msg, match) =>{
+    bot.sendSticker(msg.chat.id,'CAADBQADewIAAp_oJQq2s6621ylQxBYE');
+    console.log('result');
+    let result = await bot.getStickerSet('cindypack2');
+    console.log(result);
+
+
 })
 bot.on("message", msg=>{
     console.log(msg);

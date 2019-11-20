@@ -151,7 +151,7 @@ bot.onText(/\/del/, async (msg, match) => {
        // let admins = await controller.user.findAdminsForDel();
         let currentPage = 1;
         const limitItems = 5;
-        let result = await controller.user.UsersPagination(currentPage,limitItems);
+        let result = await controller.user.usersPagination(currentPage,limitItems);
         let delUserOption = await getUserWithPagination(result.objects);
 
         bot.sendMessage(msg.chat.id,"Choice why must died",{
@@ -164,13 +164,26 @@ bot.onText(/\/del/, async (msg, match) => {
             let id = msg.from.id;
             let parseData = JSON.parse(query.data);
             switch (parseData.whatDo) {
-                case "delChat":
-                        let resultDel = await controller.user.deleteUserByIdTelegram(parseData.id);
-                        bot.sendMessage(msg.chat.id,`You delete a : ${parseData.title}`);
+                case "delUser": {
+                    let resultDel = await controller.user.deleteUserByIdTelegram(parseData.id);
+                    bot.sendMessage(msg.chat.id, `You delete a : ${parseData.title}`);
+                    let newPageArray = await controller.user.usersPagination(currentPage,limitItems);
+                    let nextPageOption = await getUserWithPagination(newPageArray.objects);
+                    bot.editMessageReplyMarkup(
+                        {
+                            inline_keyboard: nextPageOption
+                        },
+                        {
+                            chat_id: query.message.chat.id,
+                            message_id: query.message.message_id
+                        }
+                    )
+
+                }
                     break;
                     case "nextPage":
                         if (currentPage < result.pageCount){
-                            let newPageArray = await controller.user.UsersPagination(++currentPage,limitItems);
+                            let newPageArray = await controller.user.usersPagination(++currentPage,limitItems);
                             console.log("newPageArray");
                             console.log(newPageArray);
                             let nextPageOption = await getUserWithPagination(newPageArray.objects);
@@ -187,7 +200,7 @@ bot.onText(/\/del/, async (msg, match) => {
                         break;
                         case "prevPage":
                             if (currentPage>1) {
-                                let newPageArray = await controller.user.UsersPagination(--currentPage,limitItems);
+                                let newPageArray = await controller.user.usersPagination(--currentPage,limitItems);
                                 console.log("newPageArray");
                                 console.log(newPageArray);
                                 let nextPageOption = await getUserWithPagination(newPageArray.objects);
@@ -258,7 +271,7 @@ function getUserWithPagination(users) {
                 text: `Delete ${item.first_name} ${item.last_name?item.last_name:""} ${item.phone_number}`,
                 callback_data: JSON.stringify(
                     {
-                        id: item.user_id,
+                        id: item.data_id,
                         title: `${item.first_name} ${item.last_name?item.last_name:""}`,
                         whatDo : 'delUser'
                     })

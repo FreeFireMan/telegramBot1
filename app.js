@@ -219,6 +219,9 @@ bot.onText(/\/deluser/, async (msg, match) => {
                                 )
                             }
                                 break;
+                            case "Cancel":
+                                bot.deleteMessage(query.message.chat.id, query.message.message_id);
+                                break;
                 default:
                     console.log("Something went wrong in switch case");
                     bot.sendMessage(msg.chat.id,"Something went wrong")
@@ -343,6 +346,15 @@ function getUserWithPagination(users) {
                     id: null,
                     title: null,
                     whatDo : 'prevPage'
+                })
+        },
+        {
+            text: `Cancel`,
+            callback_data: JSON.stringify(
+                {
+                    id: null,
+                    title: null,
+                    whatDo : 'Cancel'
                 })
         },
         {

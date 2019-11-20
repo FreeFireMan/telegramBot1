@@ -153,6 +153,7 @@ bot.onText(/\/deluser/, async (msg, match) => {
         const limitItems = 5;
         let result = await controller.user.usersPagination(currentPage,limitItems);
         let delUserOption = await getUserWithPagination(result.objects);
+        let countPages = result.pageCount;
         console.log("delUserOption");
         console.log(delUserOption);
 
@@ -171,6 +172,7 @@ bot.onText(/\/deluser/, async (msg, match) => {
                   //  bot.sendMessage(msg.chat.id, `You delete a : ${parseData.title}`);
                     let newPageArray = await controller.user.usersPagination(currentPage,limitItems);
                     let nextPageOption = await getUserWithPagination(newPageArray.objects);
+                    countPages = newPageArray.pageCount;
                     bot.editMessageReplyMarkup(
                         {
                             inline_keyboard: nextPageOption
@@ -184,7 +186,7 @@ bot.onText(/\/deluser/, async (msg, match) => {
                 }
                     break;
                     case "nextPage":
-                        if (currentPage < result.pageCount){
+                        if (currentPage < countPages){
                             let newPageArray = await controller.user.usersPagination(++currentPage,limitItems);
                             console.log("newPageArray");
                             console.log(newPageArray);
@@ -234,9 +236,11 @@ bot.onText(/\/delchat/, async (msg, match) => {
        // let admins = await controller.user.findAdminsForDel();
         let currentPage = 1;
         const limitItems = 3;
+
         let result = await controller.chat.chatsPagination(currentPage,limitItems);
         let delChatOption = await getChatWithPagination(result.objects);
-        console.log("delChatOption");
+        let countPages = result.pageCount;
+            console.log("delChatOption");
         console.log(delChatOption);
 
 
@@ -254,6 +258,7 @@ bot.onText(/\/delchat/, async (msg, match) => {
                           let resultDel = await controller.chat.deleteChatByIdTelegram(parseData.id);
                         //  bot.sendMessage(msg.chat.id, `You delete a : ${parseData.title}`);
                           let newPageArray = await controller.chat.chatsPagination(currentPage,limitItems);
+                          countPages = newPageArray.pageCount;
                           let nextPageOption = await getChatWithPagination(newPageArray.objects);
                           bot.editMessageReplyMarkup(
                               {
@@ -268,7 +273,7 @@ bot.onText(/\/delchat/, async (msg, match) => {
                       }
                           break;
                           case "nextPage":
-                              if (currentPage < result.pageCount){
+                              if (currentPage < countPages){
                                   let newPageArray = await controller.chat.chatsPagination(++currentPage,limitItems);
                                   console.log("newPageArray");
                                   console.log(newPageArray);

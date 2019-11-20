@@ -144,7 +144,7 @@ bot.onText(/\/owu/, (msg, match) => {
         // });
     }
 });
-bot.onText(/\/del/, async (msg, match) => {
+bot.onText(/\/deluser/, async (msg, match) => {
     let id = msg.from.id;
     let isAdmin = await controller.user.findUserWithAdmin(id);
     if (isAdmin) {
@@ -153,6 +153,8 @@ bot.onText(/\/del/, async (msg, match) => {
         const limitItems = 5;
         let result = await controller.user.usersPagination(currentPage,limitItems);
         let delUserOption = await getUserWithPagination(result.objects);
+        console.log("delUserOption");
+        console.log(delUserOption);
 
         bot.sendMessage(msg.chat.id,"Choice why must died",{
             reply_markup:{
@@ -166,7 +168,7 @@ bot.onText(/\/del/, async (msg, match) => {
             switch (parseData.whatDo) {
                 case "delUser": {
                     let resultDel = await controller.user.deleteUserByIdTelegram(parseData.id);
-                    bot.sendMessage(msg.chat.id, `You delete a : ${parseData.title}`);
+                  //  bot.sendMessage(msg.chat.id, `You delete a : ${parseData.title}`);
                     let newPageArray = await controller.user.usersPagination(currentPage,limitItems);
                     let nextPageOption = await getUserWithPagination(newPageArray.objects);
                     bot.editMessageReplyMarkup(
@@ -187,7 +189,7 @@ bot.onText(/\/del/, async (msg, match) => {
                             console.log("newPageArray");
                             console.log(newPageArray);
                             let nextPageOption = await getUserWithPagination(newPageArray.objects);
-                            bot.editMessageReplyMarkup(
+                           await bot.editMessageReplyMarkup(
                                 {
                                     inline_keyboard: nextPageOption
                                 },
@@ -221,6 +223,90 @@ bot.onText(/\/del/, async (msg, match) => {
             }
 
         });
+    } else {
+        bot.sendMessage(msg.chat.id, `Sorry, ${msg.from.first_name} ${msg.from.last_name} ${msg.from.phone_number} ${msg.from.username} you don't have permisions on this operation!`);
+    }
+});
+bot.onText(/\/delchat/, async (msg, match) => {
+    let id = msg.from.id;
+    let isAdmin = await controller.user.findUserWithAdmin(id);
+    if (isAdmin) {
+       // let admins = await controller.user.findAdminsForDel();
+        let currentPage = 1;
+        const limitItems = 3;
+        let result = await controller.chat.chatsPagination(currentPage,limitItems);
+        let delChatOption = await getChatWithPagination(result.objects);
+        console.log("delChatOption");
+        console.log(delChatOption);
+
+
+        bot.sendMessage(msg.chat.id,"Choice Chat",{
+            reply_markup:{
+                inline_keyboard: delChatOption
+            }
+        });
+              bot.on('callback_query',async (query)=>{
+                  console.log('query : ',query);
+                  let id = msg.from.id;
+                  let parseData = JSON.parse(query.data);
+                  switch (parseData.whatDo) {
+                      case "delChat": {
+                          let resultDel = await controller.chat.deleteChatByIdTelegram(parseData.id);
+                        //  bot.sendMessage(msg.chat.id, `You delete a : ${parseData.title}`);
+                          let newPageArray = await controller.chat.chatsPagination(currentPage,limitItems);
+                          let nextPageOption = await getChatWithPagination(newPageArray.objects);
+                          bot.editMessageReplyMarkup(
+                              {
+                                  inline_keyboard: nextPageOption
+                              },
+                              {
+                                  chat_id: query.message.chat.id,
+                                  message_id: query.message.message_id
+                              }
+                          )
+
+                      }
+                          break;
+                          case "nextPage":
+                              if (currentPage < result.pageCount){
+                                  let newPageArray = await controller.chat.chatsPagination(++currentPage,limitItems);
+                                  console.log("newPageArray");
+                                  console.log(newPageArray);
+                                  let nextPageOption = await getChatWithPagination(newPageArray.objects);
+                                 await bot.editMessageReplyMarkup(
+                                      {
+                                          inline_keyboard: nextPageOption
+                                      },
+                                      {
+                                          chat_id: query.message.chat.id,
+                                          message_id: query.message.message_id
+                                      }
+                                  )
+                              }
+                              break;
+                              case "prevPage":
+                                  if (currentPage>1) {
+                                      let newPageArray = await controller.chat.chatsPagination(--currentPage,limitItems);
+                                      console.log("newPageArray");
+                                      console.log(newPageArray);
+                                      let nextPageOption = await getChatWithPagination(newPageArray.objects);
+                                      bot.editMessageReplyMarkup(
+                                          {
+                                              inline_keyboard: nextPageOption
+                                          },
+                                          {
+                                              chat_id: query.message.chat.id,
+                                              message_id: query.message.message_id
+                                          }
+                                      )
+                                  }
+                                      break;
+                      default:
+                          console.log("Something went wrong in switch case");
+                          bot.sendMessage(msg.chat.id,"Something went wrong")
+                  }
+
+              });
     } else {
         bot.sendMessage(msg.chat.id, `Sorry, ${msg.from.first_name} ${msg.from.last_name} ${msg.from.phone_number} ${msg.from.username} you don't have permisions on this operation!`);
     }
@@ -280,4 +366,42 @@ function getUserWithPagination(users) {
     });
     delUserOption.push(navigation);
     return delUserOption;
+}
+function getChatWithPagination(result) {
+    let navigation = [
+        {
+            text: `<<`,
+            callback_data: JSON.stringify(
+                {
+                    id: null,
+                   // title: null,
+                    whatDo : 'prevPage'
+                })
+        },
+        {
+            text: `>>`,
+            callback_data: JSON.stringify(
+                {
+                    id: null,
+                   // title: null,
+                    whatDo : 'nextPage'
+                })
+        },
+    ]
+
+    let delChatOption = result.map(item=>{
+        return [
+            {
+                text: `Delete ${item.chat_title}`,
+                callback_data: JSON.stringify(
+                    {
+                        id: item.chat_id,
+                       // title: `${item.chat_title}`,
+                        whatDo : 'delChat'
+                    })
+            }
+        ]
+    });
+    delChatOption.push(navigation);
+    return delChatOption;
 }

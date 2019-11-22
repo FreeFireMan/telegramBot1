@@ -1,4 +1,4 @@
-let token = require('./token.js');
+/*let token = require('./token.js');
 let db = require('./database').getInstance();
 db.setModels();
 
@@ -335,8 +335,8 @@ bot.onText(/\/stic/, async (msg, match) =>{
 bot.on("message", msg=>{
     console.log(msg);
 });
-/*
-bot.editMessageText()*/
+/!*
+bot.editMessageText()*!/
 function getUserWithPagination(users) {
     let navigation = [
         {
@@ -421,4 +421,86 @@ function getChatWithPagination(result) {
     });
     delChatOption.push(navigation);
     return delChatOption;
-}
+}*/
+const Telegraf = require('telegraf');
+const session = require('telegraf/session');
+
+let token = '1006075112:AAFGjaFlDEFcOkgNmlJN4CIohcANkv-dqD8';
+//let token = '901231463:AAHMqvWSKVPQLi7ufsJwfQRIkH3Ebnx4GMw';
+
+const bot = new Telegraf(token);
+bot.use(session());
+
+bot.command('test', async (ctx, next) => {
+    if (ctx.update.message.chat.type === 'private') {
+        ctx.session.groups = [];
+        let keyboard = [
+            [
+                {
+                    text: 4,
+                    callback_data: JSON.stringify({
+                        id: -336786315,
+                        // chat_title: 'testArnold_group4',
+                        whatDo: 'sendMsg'
+                    })
+                },
+                {
+                    text: 5,
+                    callback_data: JSON.stringify({
+                        id: -349392634,
+                        // title: 'testArnold_group5',
+                        whatDo: 'sendMsg'
+                    })
+                },
+                {
+                    text: 6,
+                    callback_data: JSON.stringify({
+                        id: -366162673,
+                        // title: 'testArnold_group6',
+                        whatDo: 'sendMsg'
+                    })
+                },
+                {
+                    text: 7,
+                    callback_data: JSON.stringify({
+                        id: -351770350,
+                        // title: 'testArnold_group7',
+                        whatDo: 'sendMsg'
+                    })
+                },
+                {
+                    text: 8,
+                    callback_data: JSON.stringify({
+                        id: -383842034,
+                        // title: 'testArnold_group8',
+                        whatDo: 'sendMsg'
+                    })
+                },
+            ]
+        ];
+        await ctx.reply('Select chat for send message', {
+            reply_markup: {
+                inline_keyboard: keyboard
+            }
+        });
+    }
+});
+
+bot.on("callback_query", (ctx, next) => {
+    let cb = ctx.callbackQuery.data;
+    let parseData = JSON.parse(cb);
+    console.log(parseData.whatDo);
+    console.log(parseData.id);
+
+    console.log(typeof ctx.session.groups);
+
+    if (parseData.whatDo === 'sendMsg') {
+        ctx.session.groups.push(parseData.id);
+    }
+    console.log(ctx.session.groups);
+});
+
+
+bot.launch().then(value => {
+    console.log('Bot is started...');
+});
